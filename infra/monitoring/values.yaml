@@ -1,0 +1,16 @@
+server:
+  global:
+    scrape_interval: 15s
+
+alertmanager:
+  enabled: false
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: "game-service"
+        static_configs:
+          - targets: ["game-service:3002"]
+      - job_name: "api-gateway"
+        static_configs:
+          - targets: ["api-gateway:8080"]

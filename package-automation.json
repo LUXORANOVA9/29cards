@@ -1,0 +1,19 @@
+{
+  "name": "29cards-automation",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy:all": "node deploy-automated.js",
+    "deploy:vercel": "node deploy-automated.js --platform=vercel",
+    "deploy:netlify": "node deploy-automated.js --platform=netlify",
+    "deploy:railway": "node deploy-automated.js --platform=railway",
+    "monitor": "node monitor-health.js",
+    "setup": "node setup-all.js",
+    "start": "node server-simple.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.4",
+    "node-cron": "^3.0.3"
+  }
+}

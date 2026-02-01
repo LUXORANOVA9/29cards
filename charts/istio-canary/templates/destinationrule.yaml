@@ -1,0 +1,56 @@
+# DestinationRule for Service Subsets
+{{- range $service, $config := .Values.services }}
+{{- if $config.enabled }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ $service }}-dr
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "common.labels" $ | nindent 4 }}
+spec:
+  host: {{ $service }}
+  trafficPolicy:
+    {{- if $.Values.security.mtls.enabled }}
+    tls:
+      mode: {{ $.Values.security.mtls.mode }}
+    {{- end }}
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    loadBalancer:
+      simple: LEAST_CONN
+    {{- if $config.sessionAffinity }}
+    consistentHash:
+      httpHeaderName: "user-id"
+    {{- end }}
+  subsets:
+  - name: stable
+    labels:
+      version: stable
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 100
+        http:
+          http1MaxPendingRequests: 50
+  - name: canary
+    labels:
+      version: canary
+    trafficPolicy:
+      connectionPool:
+        tcp:
+          maxConnections: 50
+        http:
+          http1MaxPendingRequests: 25
+      {{- if $config.sessionAffinity }}
+      loadBalancer:
+        consistentHash:
+          httpHeaderName: "user-id"
+      {{- end }}
+{{- end }}
+{{- end }}

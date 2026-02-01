@@ -1,0 +1,109 @@
+# Prometheus Rules for Canary Deployment Alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: canary-alerts
+  namespace: monitoring
+  labels:
+    app: prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: canary-deployment
+    rules:
+    # Alert if canary success rate drops below threshold
+    - alert: CanarySuccessRateLow
+      expr: |
+        (
+          sum(rate(istio_requests_total{reporter="destination",response_code!~"5..",destination_subset="canary"}[5m])) /
+          sum(rate(istio_requests_total{reporter="destination",destination_subset="canary"}[5m]))
+        ) * 100 < 99
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Canary deployment success rate is below 99%"
+        description: "Canary deployment {{ $labels.destination_service }} success rate is {{ $value }}%"
+
+    # Alert if canary response time is too high
+    - alert: CanaryResponseTimeHigh
+      expr: |
+        histogram_quantile(0.95, 
+          sum(rate(istio_request_duration_seconds_bucket{reporter="destination",destination_subset="canary"}[5m])) 
+          by (le, destination_service)
+        ) > 0.5
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Canary deployment P95 response time is high"
+        description: "Canary deployment {{ $labels.destination_service }} P95 response time is {{ $value }}s"
+
+    # Alert if error rate is too high
+    - alert: CanaryErrorRateHigh
+      expr: |
+        (
+          sum(rate(istio_requests_total{reporter="destination",response_code=~"5..",destination_subset="canary"}[5m])) /
+          sum(rate(istio_requests_total{reporter="destination",destination_subset="canary"}[5m]))
+        ) * 100 > 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Canary deployment error rate is high"
+        description: "Canary deployment {{ $labels.destination_service }} error rate is {{ $value }}%"
+
+    # Alert if canary is not receiving traffic
+    - alert: CanaryNoTraffic
+      expr: |
+        sum(rate(istio_requests_total{reporter="destination",destination_subset="canary"}[5m])) == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Canary deployment is not receiving traffic"
+        description: "Canary deployment {{ $labels.destination_service }} has received no requests in the last 5 minutes"
+
+    # Game service specific alerts
+    - alert: GameServiceConnectionsHigh
+      expr: redis_connected_clients > 1000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Game service has high number of Redis connections"
+        description: "Redis has {{ $value }} connected clients"
+
+    - alert: GameServiceLatencyHigh
+      expr: |
+        histogram_quantile(0.95, 
+          sum(rate(istio_request_duration_seconds_bucket{reporter="destination",destination_service="game-service"}[5m])) 
+          by (le, destination_subset)
+        ) > 0.3
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Game service latency is high"
+        description: "Game service {{ $labels.destination_subset }} P95 response time is {{ $value }}s"
+
+  - name: deployment-health
+    rules:
+    # Pod health alerts
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod is crash looping"
+        description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+
+    - alert: PodNotReady
+      expr: kube_pod_status_ready{condition="true"} == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod is not ready"
+        description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been not ready for more than 5 minutes"

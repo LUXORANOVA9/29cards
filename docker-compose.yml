@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # ==================== DATABASES ====================
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sindhi_patta
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # ==================== BACKEND SERVICES ====================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - GAME_SERVICE_URL=http://game-service:3002
+      - WALLET_SERVICE_URL=http://wallet-service:3003
+    depends_on:
+      - auth-service
+      - game-service
+      - wallet-service
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/sindhi_patta
+      - JWT_SECRET=dev_secret
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+
+  game-service:
+    build:
+      context: .
+      dockerfile: services/game-service/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev_secret
+    ports:
+      - "3002:3002"
+    depends_on:
+      - redis
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: services/wallet-service/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/sindhi_patta
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+
+  # ==================== FRONTEND ====================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+      - NEXT_PUBLIC_GAME_SERVICE_URL=http://localhost:3002
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,62 @@
+# Canary Deployment Configuration
+canary:
+  # Initial traffic percentage for canary deployments
+  initialTrafficWeight: 5
+  # Incremental traffic weights for progressive rollout
+  trafficWeights: [5, 10, 25, 50, 100]
+  # Auto-promotion interval in minutes
+  promotionInterval: 10
+  # Health check thresholds
+  healthThreshold:
+    successRate: 99.0
+    latencyP95: 500 # milliseconds
+    errorRate: 0.1
+
+# Services to enable canary deployments
+services:
+  api-gateway:
+    enabled: true
+    port: 8080
+    targetPort: 8080
+  game-service:
+    enabled: true
+    port: 3002
+    targetPort: 3002
+    # Game service needs session affinity for WebSocket connections
+    sessionAffinity: true
+  auth-service:
+    enabled: true
+    port: 3001
+    targetPort: 3001
+  wallet-service:
+    enabled: true
+    port: 3003
+    targetPort: 3003
+  web:
+    enabled: true
+    port: 3000
+    targetPort: 3000
+
+# Monitoring and observability
+monitoring:
+  # Prometheus metrics collection
+  metrics:
+    enabled: true
+    port: 15020
+  # Distributed tracing
+  tracing:
+    enabled: true
+    sampling: 0.1 # 10% sampling rate
+  # Kiali for service mesh visualization
+  kiali:
+    enabled: true
+
+# Security policies
+security:
+  # Mutual TLS between services
+  mtls:
+    enabled: true
+    mode: STRICT
+  # Authorization policies
+  authorization:
+    enabled: true

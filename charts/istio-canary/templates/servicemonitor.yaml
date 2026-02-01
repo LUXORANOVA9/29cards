@@ -1,0 +1,27 @@
+# Service Monitor for Prometheus Metrics
+{{- range $service, $config := .Values.services }}
+{{- if $config.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $service }}-monitor
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "common.labels" $ | nindent 4 }}
+    app: {{ $service }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ $service }}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+  - port: http
+    path: /stats/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+{{- end }}
+{{- end }}

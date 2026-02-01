@@ -1,0 +1,160 @@
+// Prisma schema for Feature Flag Service
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  type        FlagType @default(BOOLEAN)
+  
+  // Percentage rollout
+  percentage  Int      @default(0) // 0-100
+  
+  // Targeting rules
+  rules       TargetingRule[]
+  
+  // A/B testing
+  isAbTest    Boolean  @default(false)
+  variants    AbVariant[]
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  updatedBy   String?
+  
+  // Environment
+  environment String   @default("production")
+  
+  @@unique([key, environment])
+  @@map("feature_flags")
+}
+
+model TargetingRule {
+  id           String           @id @default(cuid())
+  featureFlagId String
+  featureFlag  FeatureFlag     @relation(fields: [featureFlagId], references: [id], onDelete: Cascade)
+  
+  name         String
+  description  String?
+  
+  // Rule conditions
+  conditions   TargetingCondition[]
+  
+  enabled      Boolean          @default(true)
+  priority     Int              @default(0)
+  
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  
+  @@map("targeting_rules")
+}
+
+model TargetingCondition {
+  id           String         @id @default(cuid())
+  ruleId       String
+  rule         TargetingRule  @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  
+  attribute    String         // user_id, email, role, custom_property
+  operator     ConditionOperator
+  value        String         // JSON string for complex values
+  
+  createdAt    DateTime       @default(now())
+  
+  @@map("targeting_conditions")
+}
+
+model AbVariant {
+  id           String       @id @default(cuid())
+  featureFlagId String
+  featureFlag  FeatureFlag  @relation(fields: [featureFlagId], references: [id], onDelete: Cascade)
+  
+  key          String
+  name         String
+  description  String?
+  
+  // Variant configuration
+  weight       Float        @default(0.0) // 0.0-1.0
+  enabled      Boolean      @default(true)
+  
+  // Variant payload
+  payload      String?      // JSON string
+  
+  // Analytics
+  impressions  Int          @default(0)
+  conversions  Int          @default(0)
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  @@map("ab_variants")
+}
+
+model UserFlagEvaluation {
+  id           String   @id @default(cuid())
+  userId       String
+  featureKey   String
+  
+  // Evaluation result
+  enabled      Boolean
+  variantKey   String?
+  ruleId       String?
+  
+  // Context
+  context      String   // JSON string
+  timestamp    DateTime @default(now())
+  
+  @@unique([userId, featureKey, timestamp])
+  @@map("user_flag_evaluations")
+}
+
+model FlagAnalytics {
+  id           String   @id @default(cuid())
+  featureKey   String
+  timestamp    DateTime @default(now())
+  
+  // Metrics
+  totalRequests    Int @default(0)
+  enabledRequests  Int @default(0)
+  
+  // A/B testing metrics
+  variantImpressions String // JSON object {variantKey: count}
+  variantConversions String // JSON object {variantKey: count}
+  
+  // Performance
+  evaluationTimeMs  Float @default(0.0)
+  
+  @@map("flag_analytics")
+}
+
+// Enums
+enum FlagType {
+  BOOLEAN
+  PERCENTAGE
+  MULTIVARIATE
+  RULE_BASED
+}
+
+enum ConditionOperator {
+  EQUALS
+  NOT_EQUALS
+  CONTAINS
+  NOT_CONTAINS
+  STARTS_WITH
+  ENDS_WITH
+  GREATER_THAN
+  LESS_THAN
+  IN
+  NOT_IN
+  REGEX
+}

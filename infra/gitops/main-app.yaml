@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sindhi-patta
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/YOUR_USER/29cards.git' # Update with your repo
+    targetRevision: HEAD
+    path: charts/game-service # Example, in reality we'd use a parent chart
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: sindhi-patta
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

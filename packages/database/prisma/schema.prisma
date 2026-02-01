@@ -1,0 +1,537 @@
+// packages/database/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  SUPER_ADMIN
+  PANEL_ADMIN
+  BROKER
+  PLAYER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum KycStatus {
+  NOT_REQUIRED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum RoomType {
+  CLASSIC_CHAAL
+  COLD_SOUL
+}
+
+enum TableStatus {
+  WAITING
+  PLAYING
+  PAUSED
+  CLOSED
+}
+
+enum RoundStatus {
+  CREATED
+  DEALING
+  BETTING
+  SHOWDOWN
+  SETTLED
+  CANCELLED
+}
+
+enum HandType {
+  TRAIL
+  NINE
+  HIGH_CARD
+}
+
+enum FestivalPhase {
+  NONE
+  PHASE_1_FOUR_CARD
+  PHASE_2_IMAGINARY
+  PHASE_3_LOWEST
+  PHASE_4_JOKER
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  BET
+  WIN
+  NULL_COMMISSION
+  BROKER_COMMISSION
+  REFUND
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ==================== MULTI-TENANT PANEL ====================
+
+model Panel {
+  id                  String    @id @default(uuid())
+  name                String
+  slug                String    @unique
+  
+  // Branding
+  logoUrl             String?
+  primaryColor        String    @default("#6366f1")
+  secondaryColor      String    @default("#8b5cf6")
+  
+  // Commission Settings
+  nullPercent         Decimal   @default(5) @db.Decimal(5, 2)
+  maxNullPercent      Decimal   @default(10) @db.Decimal(5, 2)
+  brokerCommission    Decimal   @default(0) @db.Decimal(5, 2)
+  
+  // Subscription
+  subscriptionTier    String    @default("starter") // starter, pro, enterprise
+  subscriptionEndDate DateTime?
+  isActive            Boolean   @default(true)
+  
+  // Config
+  config              Json      @default("{}")
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  // Relations
+  users               User[]
+  tables              Table[]
+  walletId            String?   @unique
+  wallet              Wallet?   @relation("PanelWallet", fields: [walletId], references: [id])
+  
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ==================== USER MANAGEMENT ====================
+
+model User {
+  id                  String      @id @default(uuid())
+  
+  // Authentication
+  email               String?     @unique
+  phone               String?     @unique
+  passwordHash        String
+  
+  // Profile
+  displayName         String?
+  avatarUrl           String?
+  
+  // Role & Status
+  role                UserRole
+  status              UserStatus  @default(ACTIVE)
+  kycStatus           KycStatus   @default(NOT_REQUIRED)
+  
+  // Multi-tenant
+  panelId             String?
+  panel               Panel?      @relation(fields: [panelId], references: [id])
+  
+  // Broker hierarchy
+  brokerId            String?
+  broker              User?       @relation("BrokerPlayers", fields: [brokerId], references: [id])
+  players             User[]      @relation("BrokerPlayers")
+  
+  // Security
+  mfaEnabled          Boolean     @default(false)
+  mfaSecret           String?
+  deviceFingerprints  Json        @default("[]")
+  lastLoginIp         String?
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int         @default(0)
+  lockedUntil         DateTime?
+  
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  
+  // Relations
+  wallet              Wallet?     @relation("UserWallet")
+  tablePlayers        TablePlayer[]
+  hands               Hand[]
+  sessions            Session[]
+  auditLogs           AuditLog[]
+  fraudAlerts         FraudAlert[]
+  
+  @@index([panelId, role])
+  @@index([brokerId])
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+}
+
+model Session {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  accessToken   String    @unique
+  refreshToken  String    @unique
+  
+  deviceId      String?
+  deviceType    String?
+  ipAddress     String?
+  userAgent     String?
+  
+  expiresAt     DateTime
+  lastActiveAt  DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([accessToken])
+  @@index([refreshToken])
+  @@index([expiresAt])
+}
+
+// ==================== WALLET & FINANCIAL ====================
+
+model Wallet {
+  id              String    @id @default(uuid())
+  
+  // Owner (one of these)
+  userId          String?   @unique
+  user            User?     @relation("UserWallet", fields: [userId], references: [id])
+  panel           Panel?    @relation("PanelWallet")
+  
+  // Balance
+  balance         Decimal   @default(0)
+  lockedBalance   Decimal   @default(0)
+  currency        String    @default("INR")
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  ledgerEntries   LedgerEntry[]
+  walletLocks     WalletLock[]
+  
+  @@index([userId])
+}
+
+model WalletLock {
+  id          String    @id @default(uuid())
+  walletId    String
+  wallet      Wallet    @relation(fields: [walletId], references: [id])
+  
+  amount      Decimal
+  reason      String
+  roundId     String?
+  
+  isReleased  Boolean   @default(false)
+  releasedAt  DateTime?
+  
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  
+  @@index([walletId, isReleased])
+  @@index([roundId])
+  @@index([expiresAt])
+}
+
+model LedgerEntry {
+  id              String            @id @default(uuid())
+  walletId        String
+  wallet          Wallet            @relation(fields: [walletId], references: [id])
+  
+  type            LedgerEntryType
+  amount          Decimal
+  balanceAfter    Decimal
+  
+  // Reference
+  roundId         String?
+  round           Round?            @relation(fields: [roundId], references: [id])
+  
+  // Idempotency
+  clientRequestId String?           @unique
+  
+  // Metadata
+  description     String?
+  metadata        Json              @default("{}")
+  
+  createdAt       DateTime          @default(now())
+  
+  @@index([walletId, createdAt])
+  @@index([roundId])
+  @@index([type])
+  @@index([clientRequestId])
+}
+
+// ==================== GAME TABLES ====================
+
+model Table {
+  id              String        @id @default(uuid())
+  panelId         String
+  panel           Panel         @relation(fields: [panelId], references: [id])
+  
+  name            String
+  roomType        RoomType
+  status          TableStatus   @default(WAITING)
+  
+  // Betting Limits
+  minBet          Decimal
+  maxBet          Decimal
+  nullPercent     Decimal
+  
+  // Capacity
+  maxPlayers      Int           @default(6)
+  currentPlayers  Int           @default(0)
+  
+  // Privacy
+  isPrivate       Boolean       @default(false)
+  password        String?
+  
+  // Configuration
+  blindMultiplier  Decimal      @default(1)
+  seenMultiplier   Decimal      @default(2)
+  maxBettingRounds Int          @default(10)
+  turnTimeout      Int          @default(30) // seconds
+  
+  config          Json          @default("{}")
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  players         TablePlayer[]
+  rounds          Round[]
+  
+  @@index([panelId, status])
+  @@index([roomType, status])
+  @@index([status, currentPlayers])
+}
+
+model TablePlayer {
+  id              String    @id @default(uuid())
+  tableId         String
+  table           Table     @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  seatNumber      Int
+  isActive        Boolean   @default(true)
+  isDealer        Boolean   @default(false)
+  
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime?
+  
+  @@unique([tableId, seatNumber])
+  @@unique([tableId, userId])
+  @@index([tableId, isActive])
+  @@index([userId])
+}
+
+// ==================== GAME ROUNDS ====================
+
+model Round {
+  id              String        @id @default(uuid())
+  tableId         String
+  table           Table         @relation(fields: [tableId], references: [id])
+  
+  sequenceNumber  Int
+  status          RoundStatus   @default(CREATED)
+  
+  // Festival
+  festivalPhase   FestivalPhase @default(NONE)
+  jokerValue      Int?
+  
+  // Pot & Settlement
+  potAmount       Decimal       @default(0)
+  nullAmount      Decimal       @default(0)
+  
+  // Winner
+  winnerId        String?
+  winnerSeat      Int?
+  winAmount       Decimal       @default(0)
+  
+  // Shuffle Proof
+  seedHash        String?
+  
+  // Turn Management
+  dealerSeat      Int
+  currentTurn     Int?
+  bettingRound    Int           @default(1)
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  startedAt       DateTime?
+  settledAt       DateTime?
+  
+  // Relations
+  hands           Hand[]
+  bets            Bet[]
+  events          RoundEvent[]
+  shuffleProof    ShuffleProof?
+  ledgerEntries   LedgerEntry[]
+  
+  @@unique([tableId, sequenceNumber])
+  @@index([tableId, status])
+  @@index([createdAt])
+}
+
+model Hand {
+  id              String    @id @default(uuid())
+  roundId         String
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  seatNumber      Int
+  cards           Json      // ["2♠", "5♥", "8♦"]
+  handType        HandType?
+  handValue       Int?
+  
+  hasSeen         Boolean   @default(false)
+  isFolded        Boolean   @default(false)
+  isWinner        Boolean   @default(false)
+  
+  // Festival Phase 1: 4-card game
+  selectedCards   Json?
+  discardedCard   String?
+  
+  // Festival Phase 2: Imaginary card
+  imaginaryCard   String?
+  
+  createdAt       DateTime  @default(now())
+  
+  @@unique([roundId, userId])
+  @@unique([roundId, seatNumber])
+  @@index([roundId])
+}
+
+model Bet {
+  id              String    @id @default(uuid())
+  roundId         String
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  userId          String
+  seatNumber      Int
+  
+  action          String    // "BLIND", "CHAAL", "PLUS_CHAAL", "FOLD", "SIDE_SHOW", "SHOW"
+  amount          Decimal   @db.Decimal(18, 2)
+  bettingRound    Int
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([roundId, bettingRound])
+  @@index([userId])
+}
+
+model RoundEvent {
+  id              String    @id @default(uuid())
+  roundId         String
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  eventType       String
+  payload         Json
+  sequenceNumber  Int
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([roundId, sequenceNumber])
+}
+
+model ShuffleProof {
+  id              String    @id @default(uuid())
+  roundId         String    @unique
+  round           Round     @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  seed            String?   // Encrypted, revealed only for disputes
+  seedHash        String
+  shuffleOrder    Json?     // Card order for verification
+  algorithm       String    @default("HMAC-SHA256-DRBG")
+  signature       String?   // KMS signature
+  
+  createdAt       DateTime  @default(now())
+}
+
+// ==================== AUDIT & SECURITY ====================
+
+model AuditLog {
+  id              String    @id @default(uuid())
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  
+  action          String
+  resource        String
+  resourceId      String?
+  
+  oldValue        Json?
+  newValue        Json?
+  
+  ipAddress       String?
+  userAgent       String?
+  
+  severity        String    @default("INFO")
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([resource, resourceId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model FraudAlert {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  
+  alertType       String
+  severity        AlertSeverity
+  score           Decimal
+  
+  details         Json
+  evidence        Json          @default("[]")
+  
+  isReviewed      Boolean       @default(false)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  resolution      String?
+  
+  createdAt       DateTime      @default(now())
+  
+  @@index([userId])
+  @@index([isReviewed, severity])
+  @@index([alertType])
+  @@index([createdAt])
+}
+
+// ==================== IDEMPOTENCY ====================
+
+model IdempotencyKey {
+  id          String    @id @default(uuid())
+  key         String    @unique
+  response    Json?
+  
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  
+  @@index([key])
+  @@index([expiresAt])
+}

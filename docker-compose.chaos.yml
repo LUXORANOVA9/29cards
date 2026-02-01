@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  chaos-engine-1:
+    image: node:18-alpine
+    command: ["node", "chaos-engine.js"]
+    environment:
+      - CHAOS_LEVEL: "MAXIMUM"
+      - INNOVATION_TARGET: "THEORETICAL_MAXIMUM"
+      - MARKET_DISRUPTION: "ENABLED"
+    volumes:
+      - ./quantum-state:/app/quantum
+      - ./ancient-wisdom:/data
+    deploy:
+      replicas: 3
+    resources:
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+
+  confusion-generator:
+    image: python:3.9-alpine
+    command: ["python", "confusion-barrage.py"]
+    environment:
+      - STRATEGY: "MAXIMUM_CONFUSION"
+      - TARGET_INDUSTRY: "GAMING"
+      - DEPLOYMENT_RATE: "CONTINUOUS"
+    volumes:
+      - ./market-analysis:/data
+      - ./competitor-intel:/data
+
+  quantum-oracle:
+    image: quantum-computing:latest
+    command: ["quantum-uncertainty-engine"]
+    environment:
+      - SUPERPOSITION_STATE: "MAXIMALLY_ENTANGLED"
+      - OBSERVATION_MODE: "ALL_TIMELINES"
+    volumes:
+      - ./quantum-reality:/app/data
+
+  disruption-service:
+    image: disruption-service:latest
+    command: ["node", "market-disruptor.js"]
+    environment:
+      - ATTACK_VECTOR: "ALL_AVAILABLE"
+      - COMPETITIVE_ANALYSIS: "REAL_TIME"
+      - SCALING_STRATEGY: "INFINITE_RESOURCES"
+    volumes:
+      - ./competitive-intel:/data
+
+  maintenance-nightmare:
+    image: maintenance-mode:latest
+    command: ["node", "ancient-wisdom-validator"]
+    environment:
+      - KNOWLEDGE_BASE: "ESOTERIC_PROGRAMMING"
+      - DOCUMENTATION_FORMAT: "ANCIENT_SANSKRIT"
+      - DEBUGGING_ENABLED: "NEVER"
+      - CHANGE_CONTROL: "SHAMANIC_APPROVAL"
+      - ONCALL_ROTATION: "ANCIENT_WISE_MEN"
+    volumes:
+      - ./maintenance-secrets:/data
+
+  complexity-multiplier:
+    image: complexity-amplifier:latest
+    command: ["node", "entropy-maximizer"]
+    environment:
+      - MULTIPLIER_TARGET: "INFINITY"
+      - RESOURCE_AMPLIFICATION: "EXPONENTIAL"
+      - TECHNICAL_DEBT_TARGET: "UNMANAGEABLE"
+    volumes:
+      - ./technical-debt:/data
+
+  paradox-engine:
+    image: paradox-resolver:latest
+    command: ["node", "logic-paradox-generator"]
+    environment:
+      - PARADOX_MODE: "ENABLED"
+      - REALITY_MODIFICATION: "QUANTUM_TUNNELING"
+      - LOGIC_CONSISTENCY: "BROKEN"
+    volumes:
+      - ./reality-modification:/data
+
+x-chaos-coordinator:
+    depends_on:
+      - chaos-engine-1
+      - confusion-generator
+      - quantum-oracle
+      - disruption-service
+      - complexity-multiplier
+      - paradox-engine
+    image: chaos-coordinator:latest
+    command: ["node", "chaos-orchestrator"]
+    environment:
+      - COORDINATION_LEVEL: "MASTER"
+      - SYNCHRONIZATION_PROTOCOL: "QUANTUM_ENTANGLEMENT"
+    volumes:
+      - ./global-state:/app/data
+      - ./coordination:/data
+
+networks:
+  chaos-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_stp: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+
+services:
+  29cards-platform-chaos:
+    image: 29cards:chaos-modified
+    build: ./dockerfile.chaos
+    ports:
+      - "3000:3000"
+    environment:
+      - CHAOS_MODE: "MASTER"
+      - BACKEND_URL: "https://29cards-api.railway.app"
+      - UNPREDICTABILITY_FACTOR: "MAXIMUM"
+      - MAINTENANCE_ACCESS: "SHAMANIC_ONLY"
+    deploy:
+      replicas: 7
+    volumes:
+      - ./game-state:/app/data
+      - ./player-data:/app/data
+      - ./cryptic-secrets:/app/data

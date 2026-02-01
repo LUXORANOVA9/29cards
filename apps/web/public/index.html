@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>29Cards - Sindhi Patta Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: rgba(255,255,255,0.95); padding: 40px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 500px; text-align: center; }
+        .title { font-size: 2.5em; color: #333; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 1.2em; }
+        .play-button { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; border: none; padding: 15px 40px; font-size: 1.2em; border-radius: 50px; cursor: pointer; transition: transform 0.3s; text-decoration: none; display: inline-block; margin: 10px; }
+        .play-button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .status { background: #4CAF50; color: white; padding: 10px 20px; border-radius: 20px; margin: 20px 0; font-weight: bold; }
+        .urls { margin-top: 30px; font-size: 0.9em; color: #555; }
+        .urls a { color: #4ECDC4; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🃏 29Cards</h1>
+        <p class="subtitle">Sindhi Patta - Hierarchical Betting Game</p>
+        
+        <div class="status">✅ PLATFORM LIVE & WORKING</div>
+        
+        <div>
+            <a href="https://29cards-api.railway.app" class="play-button">🎮 Play Game</a>
+            <a href="/admin" class="play-button">👑 Admin Panel</a>
+        </div>
+        
+        <div class="urls">
+            <p><strong>🌐 Game API:</strong> <a href="https://29cards-api.railway.app" target="_blank">https://29cards-api.railway.app</a></p>
+            <p><strong>📊 Health Check:</strong> <a href="https://29cards-api.railway.app/health" target="_blank">/health</a></p>
+            <p><strong>🎯 Default Login:</strong> super@admin.com / password123</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simple fallback for platform access
+        console.log('29Cards Platform Loaded - Backend: https://29cards-api.railway.app');
+        
+        // Auto-redirect to API after 3 seconds
+        setTimeout(() => {
+            window.location.href = 'https://29cards-api.railway.app';
+        }, 3000);
+    </script>
+</body>
+</html>

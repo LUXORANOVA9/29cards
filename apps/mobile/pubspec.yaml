@@ -1,0 +1,33 @@
+name: mobile
+description: Sindhi Patta 29 Cards Mobile Client
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  provider: ^6.0.0
+
+  # Networking
+  dio: ^5.0.0
+  socket_io_client: ^2.0.0
+
+  # Storage
+  flutter_secure_storage: ^8.0.0
+
+  # UI
+  google_fonts: ^6.0.0
+  flutter_animate: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true

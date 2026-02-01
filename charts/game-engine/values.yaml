@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: harbor.local/app/game-engine
+  tag: ""
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+securityContext:
+  privileged: false
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+env:
+  POSTGRES_DSN: "postgres://app:${POSTGRES_PASSWORD}@postgres-rw:5432/app"

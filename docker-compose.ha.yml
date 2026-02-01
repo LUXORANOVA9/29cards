@@ -1,0 +1,223 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Primary Database
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: sindhi-patta-postgres-primary
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_wal:/var/lib/postgresql/wal
+      - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
+    ports:
+      - "5432:5432"
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c max_parallel_workers_per_gather=4
+      -c max_worker_processes=8
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='gzip'
+      -c wal_keep_segments=32
+      -c hot_standby=on
+      -c max_standby_archive_delay=30s
+      -c max_standby_streaming_delay=30s
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Replica (for HA)
+  postgres-replica:
+    image: postgres:15-alpine
+    container_name: sindhi-patta-postgres-replica
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      POSTGRES_MASTER_HOST: postgres-primary
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+      - postgres_replica_wal:/var/lib/postgresql/wal
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    command: >
+      postgres
+      -c max_connections=200
+      -c hot_standby=on
+      -c restore_command='cp /var/lib/postgresql/wal/000000010.history /var/lib/postgresql/wal/000000010.history.backup'
+      -c primary_conninfo='host=postgres-primary port=5432 user=${POSTGRES_USER}'
+      -c standby_mode=on
+      -c max_standby_archive_delay=30s
+      -c max_standby_streaming_delay=30s
+    depends_on:
+      - postgres-primary
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Load Balancer (HAProxy)
+  postgres-lb:
+    image: haproxy:2.8-alpine
+    container_name: sindhi-patta-postgres-lb
+    volumes:
+      - ./config/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - haproxy_logs:/var/log/haproxy
+    ports:
+      - "5434:5434"  # External port
+      - "8404:8404"  # HAProxy stats
+    depends_on:
+      - postgres-primary
+      - postgres-replica
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Redis Master (for clustering)
+  redis-master:
+    image: redis:7.2-alpine
+    container_name: sindhi-patta-redis-master
+    volumes:
+      - redis_master_data:/data
+      - redis_master_conf:/usr/local/etc/redis
+      - ./config/redis-master.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
+      - "16379:16379"  # Cluster bus
+      - "26379:26379"  # Cluster gossip
+    command: >
+      redis-server
+      /usr/local/etc/redis/redis.conf
+      --protected-mode no
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --cluster-announce-ip redis-master
+      --cluster-announce-port 6379
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Redis Slave (for HA)
+  redis-slave:
+    image: redis:7.2-alpine
+    container_name: sindhi-patta-redis-slave
+    volumes:
+      - redis_slave_data:/data
+      - redis_slave_conf:/usr/local/etc/redis
+      - ./config/redis-slave.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6380:6379"
+      - "16380:16379"
+      - "26380:26379"
+    command: >
+      redis-server
+      /usr/local/etc/redis/redis.conf
+      --protected-mode no
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --cluster-announce-ip redis-slave
+      --cluster-announce-port 6379
+      --cluster-replicaof redis-master 6379
+    depends_on:
+      - redis-master
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Redis Cluster Manager
+  redis-cluster:
+    image: redis:7.2-alpine
+    container_name: sindhi-patta-redis-cluster-manager
+    volumes:
+      - redis_cluster_data:/data
+      - ./config/redis-cluster.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "7000:7000"  # Cluster management
+    command: >
+      redis-cli --cluster create
+      127.0.0.1:6379 127.0.0.1:6380
+      --cluster-replicas 1
+      --cluster-yes
+    networks:
+      - sindhi-patta-network
+    restart: unless-stopped
+    depends_on:
+      - redis-master
+      - redis-slave
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  postgres_wal:
+    driver: local
+  postgres_replica_wal:
+    driver: local
+  redis_master_data:
+    driver: local
+  redis_slave_data:
+    driver: local
+  redis_cluster_data:
+    driver: local
+  redis_master_conf:
+    driver: local
+  redis_slave_conf:
+    driver: local
+  haproxy_logs:
+    driver: local
+
+networks:
+  sindhi-patta-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

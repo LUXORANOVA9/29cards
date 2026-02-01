@@ -1,0 +1,14 @@
+{
+  "name": "29cards-spa",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server-fallback.js",
+    "build": "echo 'SPA build - no build needed'",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=.",
+    "deploy:railway": "railway up"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

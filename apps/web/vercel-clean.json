@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "sindhi-patta",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://29cards-api.railway.app",
+    "NEXT_PUBLIC_GAME_SERVICE_URL": "https://29cards-api.railway.app"
+  }
+}

@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canary-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  canary-deployment.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Canary Deployment Monitoring",
+        "tags": ["canary", "istio", "deployment"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "Request Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_requests_total{reporter=\"destination\",response_code!~\"5..\"}[5m])) / sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) * 100",
+                "legendFormat": "Success Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 95},
+                    {"color": "green", "value": 99}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (destination_service)",
+                "legendFormat": "{{destination_service}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Requests/sec"},
+              {"show": false}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "title": "Response Time P95",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_seconds_bucket{reporter=\"destination\"}[5m])) by (le, destination_service))",
+                "legendFormat": "P95 - {{destination_service}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Seconds"},
+              {"show": false}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_requests_total{reporter=\"destination\",response_code=~\"5..\"}[5m])) by (destination_service)",
+                "legendFormat": "5xx - {{destination_service}}"
+              },
+              {
+                "expr": "sum(rate(istio_requests_total{reporter=\"destination\",response_code=~\"4..\"}[5m])) by (destination_service)",
+                "legendFormat": "4xx - {{destination_service}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Errors/sec"},
+              {"show": false}
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "title": "Traffic Split",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (destination_subset)",
+                "legendFormat": "{{destination_subset}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqps"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "title": "Active Connections",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(redis_connected_clients)",
+                "legendFormat": "Redis Connections"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }

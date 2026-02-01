@@ -1,0 +1,33 @@
+// Fix for Prisma schema to add unique constraint for key+environment
+// This needs to be added to the schema.prisma file
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  type        FlagType @default(BOOLEAN)
+  
+  // Percentage rollout
+  percentage  Int      @default(0) // 0-100
+  
+  // Targeting rules
+  rules       TargetingRule[]
+  
+  // A/B testing
+  isAbTest    Boolean  @default(false)
+  variants    AbVariant[]
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  updatedBy   String?
+  
+  // Environment
+  environment String   @default("production")
+  
+  @@unique([key, environment]) // Add this unique constraint
+  @@map("feature_flags")
+}

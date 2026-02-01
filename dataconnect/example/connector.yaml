@@ -1,0 +1,43 @@
+connectorId: example
+generate:
+  javascriptSdk:
+    - outputDir: ..\..\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..
+      react: false
+      angular: false
+    - outputDir: ..\..\services\wallet-service\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\services\wallet-service
+      react: false
+      angular: false
+    - outputDir: ..\..\services\game-service\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\services\game-service
+      react: false
+      angular: false
+    - outputDir: ..\..\services\auth-service\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\services\auth-service
+      react: false
+      angular: false
+    - outputDir: ..\..\services\api-gateway\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\services\api-gateway
+      react: false
+      angular: false
+    - outputDir: ..\..\packages\game-engine\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\packages\game-engine
+      react: false
+      angular: false
+    - outputDir: ..\..\packages\database\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\packages\database
+      react: false
+      angular: false
+    - outputDir: ..\..\apps\web\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\apps\web
+      react: true
+      angular: false

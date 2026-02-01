@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "name": "29cards-game",
+  "builds": [
+    {
+      "src": "server-simple.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server-simple.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

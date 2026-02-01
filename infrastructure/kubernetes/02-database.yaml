@@ -1,0 +1,153 @@
+# PostgreSQL HA Cluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+  namespace: 29cards
+spec:
+  instances: 3
+  
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+      work_mem: "4MB"
+      maintenance_work_mem: "64MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      
+  bootstrap:
+    initdb:
+      database: sindhi_patta
+      owner: sindhi_user
+      secret:
+        name: postgres-credentials
+        
+  storage:
+    size: 100Gi
+    storageClass: fast-ssd
+    
+  monitoring:
+    enabled: true
+    
+  backup:
+    enabled: true
+    retention: "30d"
+    schedule: "0 2 * * *"
+    
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+      
+  nodeAffinity:
+    required:
+      - nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-type
+                operator: In
+                values: ["database"]
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: 29cards
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: 5432
+  type: ClusterIP
+---
+# Redis Cluster
+apiVersion: redis.io/v1beta2
+kind: RedisCluster
+metadata:
+  name: redis-cluster
+  namespace: 29cards
+spec:
+  replicas: 6
+  redisExporter:
+    enabled: true
+  storage:
+    type: persistent-claim
+    size: 20Gi
+    class: fast-ssd
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  configuration:
+    maxmemory-policy: "allkeys-lru"
+    appendonly: "yes"
+    save: "900 1 300 10 60 1000"
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: 29cards
+spec:
+  selector:
+    app: redis
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  type: ClusterIP
+---
+# Secrets Management
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: 29cards
+type: Opaque
+data:
+  username: c2luZGhX3VzZXI=  # base64: sindhi_user
+  password: c2VjdXJlX3Bhc3N3b3JkX2NoYW5nZV9tZQ==  # base64: secure_password_change_me
+  database: c2luZGhX3BhdHRh  # base64: sindhi_patta
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: 29cards
+type: Opaque
+data:
+  jwt-secret: cHJvZHVjdGlvbl9qd3Rfc2VjcmV0X2NoYW5nZV9tZV8zMl9jaGFycw==  # Generate proper secret
+  encryption-key: ZW5jcnlwdGlvbl9rZXlfZ2VuZXJhdGVkX2luX3Byb2R1Y3Rpb24=  # Generate proper secret
+  redis-password: cmVkaXNfc2VjcmV0X3Bhc3N3b3Jk
+---
+# ConfigMaps for Application
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: 29cards
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  METRICS_ENABLED: "true"
+  DATABASE_URL: "postgresql://sindhi_user:secure_password_change_me@postgres-service:5432/sindhi_patta"
+  REDIS_URL: "redis://redis-service:6379"
+  JWT_ISSUER: "29cards-platform"
+  JWT_AUDIENCE: "29cards-users"
+  CIRCUIT_BREAKER_TIMEOUT: "5000"
+  RATE_LIMIT_WINDOW: "900000"
+  RATE_LIMIT_MAX: "100"

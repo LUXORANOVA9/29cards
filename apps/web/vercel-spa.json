@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "name": "sindhi-patta-spa",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "server-fallback.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/health",
+      "dest": "/server-fallback.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://29cards-api.railway.app",
+    "NEXT_PUBLIC_GAME_SERVICE_URL": "https://29cards-api.railway.app"
+  }
+}

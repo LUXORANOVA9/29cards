@@ -1,0 +1,14 @@
+{
+  "name": "sindhi-patta",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "next build",
+    "deploy:netlify": "next build && npx netlify deploy --prod --dir=.next",
+    "deploy:vercel": "next build && vercel --prod",
+    "start": "next start",
+    "dev": "next dev"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">29cards</string>
+    <string name="title_activity_main">29cards</string>
+    <string name="package_name">com.cards29.app</string>
+    <string name="custom_url_scheme">com.cards29.app</string>
+</resources>

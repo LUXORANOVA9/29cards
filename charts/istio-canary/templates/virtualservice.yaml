@@ -1,0 +1,47 @@
+# VirtualService for Canary Deployments
+{{- range $service, $config := .Values.services }}
+{{- if $config.enabled }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ $service }}-vs
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "common.labels" $ | nindent 4 }}
+spec:
+  hosts:
+  - "{{ $service }}.{{ $.Release.Namespace }}.svc.cluster.local"
+  - "{{ $service }}.{{ $.Values.global.domain | default "local" }}"
+  gateways:
+  - {{ include "common.fullname" $ }}-gateway
+  http:
+  # Canary traffic routing
+  - match:
+    - headers:
+        canary:
+          exact: "true"
+    route:
+    - destination:
+        host: {{ $service }}
+        subset: canary
+      weight: 100
+  # Production traffic split
+  - route:
+    - destination:
+        host: {{ $service }}
+        subset: stable
+      weight: {{ $.Values.canary.initialTrafficWeight | default 95 }}
+    - destination:
+        host: {{ $service }}
+        subset: canary
+      weight: {{ sub 100 ($.Values.canary.initialTrafficWeight | default 95) }}
+    {{- if $config.sessionAffinity }}
+    fault:
+      delay:
+        percentage:
+          value: 0
+        fixedDelay: 0s
+    {{- end }}
+{{- end }}
+{{- end }}
