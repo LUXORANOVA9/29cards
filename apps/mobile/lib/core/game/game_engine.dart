@@ -250,9 +250,9 @@ class FestivalState {
 // Game Engine Core Class
 class GameEngineService {
   late SocketIO _socket;
-  late Function(GameState) _onStateUpdate;
-  late Function(ChatMessage) _onChatMessage;
-  late Function(Map<String, dynamic>) _onError;
+  late final Function(GameState) _onStateUpdate;
+  late final Function(ChatMessage) _onChatMessage;
+  late final Function(Map<String, dynamic>) _onError;
   
   String? _tableId;
   String? _playerId;
