@@ -1,6 +1,8 @@
 // Services Architecture
 // lib/core/services/auth_service.dart
 
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -40,9 +42,9 @@ class AuthService {
     _refreshToken = await _secureStorage.read(key: 'refresh_token');
     
     // Load user data
-    final userJson = await _prefs.getString('current_user');
+    final userJson = _prefs.getString('current_user');
     if (userJson != null) {
-      _currentUser = User.fromJson(userJson!);
+      _currentUser = User.fromJson(jsonDecode(userJson));
     }
   }
 
@@ -56,7 +58,7 @@ class AuthService {
     await _secureStorage.write(key: 'refresh_token', value: refreshToken);
     
     if (user != null) {
-      await _prefs.setString('current_user', user.toJson());
+      await _prefs.setString('current_user', jsonEncode(user.toJson()));
       _currentUser = user;
     }
   }
@@ -113,7 +115,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -161,7 +163,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -179,7 +181,7 @@ class AuthService {
       final data = response.data;
       
       if (response.statusCode == 200) {
-        return AuthResult.success(
+        return const AuthResult.success(
           message: 'OTP sent successfully',
         );
       } else {
@@ -194,7 +196,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -242,7 +244,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -296,7 +298,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -359,7 +361,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -413,7 +415,7 @@ class AuthService {
             displayName: displayName,
             avatarUrl: avatarUrl,
           );
-          await _prefs.setString('current_user', updatedUser.toJson());
+          await _prefs.setString('current_user', jsonEncode(updatedUser.toJson()));
           _currentUser = updatedUser;
         }
         
@@ -421,7 +423,7 @@ class AuthService {
           message: 'Profile updated successfully',
         );
       } else {
-        return AuthResult.error(
+        return const AuthResult.error(
           message: 'Failed to update profile',
           code: 'PROFILE_UPDATE_FAILED',
         );
@@ -432,7 +434,7 @@ class AuthService {
         code: 'NETWORK_ERROR',
       );
     } catch (e) {
-      return AuthResult.error(
+      return const AuthResult.error(
         message: 'An unexpected error occurred',
         code: 'UNKNOWN_ERROR',
       );
@@ -486,7 +488,7 @@ class User {
       emailVerified: json['email_verified'] ?? false,
       phoneVerified: json['phone_verified'] ?? false,
       status: UserStatus.values.firstWhere(
-        (e) => e.toString() == json['status'],
+        (e) => e.name == json['status'],
         orElse: () => UserStatus.active,
       ),
     );
@@ -525,7 +527,7 @@ class User {
       'last_login_at': lastLoginAt?.toIso8601String(),
       'email_verified': emailVerified,
       'phone_verified': phoneVerified,
-      'status': status.toString(),
+      'status': status.name,
     };
   }
 }

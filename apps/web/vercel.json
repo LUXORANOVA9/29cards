@@ -1,18 +1,10 @@
 {
   "version": 2,
   "name": "29cards-web",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://29cards-api.railway.app",
     "NEXT_PUBLIC_GAME_SERVICE_URL": "https://29cards-api.railway.app"
@@ -21,9 +13,5 @@
     "pages/**/*.js": {
       "maxDuration": 30
     }
-  },
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "framework": "nextjs"
+  }
 }

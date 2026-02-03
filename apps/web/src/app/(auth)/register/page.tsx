@@ -4,7 +4,8 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/authStore';
-import axios from 'axios';
+import api from '@/lib/api';
+import { endpoints } from '@/lib/config';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -22,11 +23,10 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/auth/register', {
+      const response = await api.post(endpoints.auth.register, {
         email,
         password,
         phone: phone || undefined,
-        role: 'PLAYER',
       });
 
       const { accessToken, user } = response.data;
@@ -82,7 +82,8 @@ export default function RegisterPage() {
                 type="password"
                 required
                 className="relative block w-full rounded-b-md border-0 bg-gray-700 py-2.5 px-3 text-white ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
-                placeholder="Password"
+                placeholder="Password (min 6 characters)"
+                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -95,7 +96,7 @@ export default function RegisterPage() {
               disabled={loading}
               className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
             >
-              {loading ? 'Create Account' : 'Sign up'}
+              {loading ? 'Creating Account...' : 'Sign up'}
             </button>
           </div>
         </form>
