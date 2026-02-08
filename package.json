@@ -9,11 +9,12 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=web...",
     "lint": "turbo run lint",
     "start": "turbo run start",
     "db:generate": "cd packages/database && npx prisma generate",
-    "db:push": "cd packages/database && npx prisma db push"
+    "db:push": "cd packages/database && npx prisma db push",
+    "sync-android": "unset NPM_CONFIG_PREFIX && export NVM_DIR=\"$HOME/.nvm\" && [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\" && nvm use --lts && cd apps/web && npx cap sync"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

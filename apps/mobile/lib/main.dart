@@ -1,37 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'services/api_service.dart';
-import 'services/socket_service.dart';
-import 'providers/auth_provider.dart';
-import 'providers/game_provider.dart';
+import 'core/api_client.dart';
 
 void main() {
-  runApp(const SindhiPattaApp());
+  runApp(const MyApp());
 }
 
-class SindhiPattaApp extends StatelessWidget {
-  const SindhiPattaApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final apiService = ApiService();
-    final socketService = SocketService();
+    return MaterialApp(
+      title: '29Cards Mobile',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(),
+    );
+  }
+}
 
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider(apiService)),
-        ChangeNotifierProvider(create: (_) => GameProvider(socketService)),
-      ],
-      child: MaterialApp(
-        title: 'Sindhi Patta (29 Cards)',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: const Scaffold(
-          body: Center(
-            child: Text('Sindhi Patta Mobile - Ready'),
-          ),
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  late ApiClient _apiClient;
+  String _status = 'Disconnected';
+  final List<String> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _apiClient = ApiClient(
+      onMessage: (message) {
+        setState(() {
+          _messages.add(message);
+        });
+      },
+      onStatus: (status) {
+        setState(() {
+          _status = status;
+        });
+      },
+    );
+    _apiClient.connect();
+  }
+
+  @override
+  void dispose() {
+    _apiClient.disconnect();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('29Cards Mobile'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'Status: $_status',
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  return Text(_messages[index]);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
