@@ -1331,6 +1331,16 @@ eval("\nmodule.exports = __webpack_require__(/*! ../../module.compiled */ \"(ssr
 
 /***/ }),
 
+/***/ "(ssr)/../../node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js":
+/*!***************************************************************************************************************!*\
+  !*** ../../node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js ***!
+  \***************************************************************************************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+eval("\nmodule.exports = __webpack_require__(/*! ../../module.compiled */ \"(ssr)/../../node_modules/next/dist/server/future/route-modules/app-page/module.compiled.js?378a\").vendored[\"react-ssr\"].ReactJsxDevRuntime; //# sourceMappingURL=react-jsx-dev-runtime.js.map\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHNzcikvLi4vLi4vbm9kZV9tb2R1bGVzL25leHQvZGlzdC9zZXJ2ZXIvZnV0dXJlL3JvdXRlLW1vZHVsZXMvYXBwLXBhZ2UvdmVuZG9yZWQvc3NyL3JlYWN0LWpzeC1kZXYtcnVudGltZS5qcyIsIm1hcHBpbmdzIjoiQUFBYTtBQUNiQSw2TUFBMEYsRUFFMUYsaURBQWlEIiwic291cmNlcyI6WyJ3ZWJwYWNrOi8vd2ViLy4uLy4uL25vZGVfbW9kdWxlcy9uZXh0L2Rpc3Qvc2VydmVyL2Z1dHVyZS9yb3V0ZS1tb2R1bGVzL2FwcC1wYWdlL3ZlbmRvcmVkL3Nzci9yZWFjdC1qc3gtZGV2LXJ1bnRpbWUuanM/MTM1MyJdLCJzb3VyY2VzQ29udGVudCI6WyJcInVzZSBzdHJpY3RcIjtcbm1vZHVsZS5leHBvcnRzID0gcmVxdWlyZShcIi4uLy4uL21vZHVsZS5jb21waWxlZFwiKS52ZW5kb3JlZFtcInJlYWN0LXNzclwiXS5SZWFjdEpzeERldlJ1bnRpbWU7XG5cbi8vIyBzb3VyY2VNYXBwaW5nVVJMPXJlYWN0LWpzeC1kZXYtcnVudGltZS5qcy5tYXAiXSwibmFtZXMiOlsibW9kdWxlIiwiZXhwb3J0cyIsInJlcXVpcmUiLCJ2ZW5kb3JlZCIsIlJlYWN0SnN4RGV2UnVudGltZSJdLCJzb3VyY2VSb290IjoiIn0=\n//# sourceURL=webpack-internal:///(ssr)/../../node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js\n");
+
+/***/ }),
+
 /***/ "(ssr)/../../node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-runtime.js":
 /*!***********************************************************************************************************!*\
   !*** ../../node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-runtime.js ***!
