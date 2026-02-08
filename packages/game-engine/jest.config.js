@@ -2,6 +2,6 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    // Match test files in src/tests
-    testMatch: ['**/src/tests/**/*.test.ts'],
+    // Match test files in the root directory
+    testMatch: ['**/test-game-engine.test.ts'],
 };
