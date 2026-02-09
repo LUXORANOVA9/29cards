@@ -7,6 +7,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@29cards/observability": "file:../../packages/observability",
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "@prisma/client": "^5.10.2",
     "@types/morgan": "^1.9.10",
@@ -17,9 +18,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
-    "prom-client": "^15.1.3",
     "uuid": "^9.0.1",
-    "winston": "^3.19.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
