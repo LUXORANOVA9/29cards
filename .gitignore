@@ -1,48 +1,24 @@
-# Node
-node_modules/
-**/node_modules/
-dist/
-build/
-out/
-.turbo/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Env
-.env
-.env.*
-.env.production
+node_modules
+dist
+dist-ssr
+*.local
 
-# Firebase / Vercel
-.firebase/
-.vercel/
-.vercelignore
-firebase-debug.log*
-
-# Cache / temp
-.npm-cache/
-.tmp/
-.trae/
-
-# Dart / Flutter
-.dart_tool/
-
-# Editors / OS
-.vscode/
-.idea/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-desktop.ini
-
-# Junk / legacy
-29cards_client/
-agents/
-moltbot/
-ops/
-solar-kuiper/
-demo/
-charts/
-src/
-infra/
-infrastructure/
-java-*/
-*.bat
-*.ps1
-*.sh
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

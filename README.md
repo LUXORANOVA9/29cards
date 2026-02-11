@@ -1,80 +1,73 @@
-# 🃏 Sindhi Patta (29 Cards) Platform
+# Welcome to your Lovable project
 
-> **A Multi-Tenant, White-Label SaaS Gaming Platform**
+## Project info
 
-![Status](https://img.shields.io/badge/Status-Production%20Ready-green)
-![Stack](https://img.shields.io/badge/Tech-Next.js%20%7C%20Node.js%20%7C%20Redis%20%7C%20PostgreSQL-blue)
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-A high-performance, server-authoritative real-time game engine implementing the **Sindhi Patta** ruleset. Built for scale, security, and financial integrity.
+## How can I edit this code?
 
----
+There are several ways of editing your application.
 
-## 🚀 Quick Start
+**Use Lovable**
 
-### Prerequisites
-*   Node.js 18+
-*   Docker & Docker Compose
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-### 1. Start the Platform
-Run the automated startup script to install dependencies, seed the database, and launch all services:
+Changes made via Lovable will be committed automatically to this repo.
 
-```bash
-./start-all.sh
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-### 2. Access Interfaces
-*   **Player Lobby**: [http://localhost:3000](http://localhost:3000)
-*   **Admin Dashboard**: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
-*   **API Gateway**: [http://localhost:8080/health](http://localhost:8080/health)
+**Edit a file directly in GitHub**
 
-### 3. Default Credentials
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Super Admin** | `super@admin.com` | `password123` |
-| **Panel Admin** | `admin@demo.com` | `password123` |
-| **Player** | `player1@demo.com` | `password123` |
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
----
+**Use GitHub Codespaces**
 
-## 🏗 Technology Stack
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-*   **Frontend**: Next.js 14 (App Router), Tailwind CSS, Zustand, Framer Motion
-*   **Backend**: Node.js Microservices (Express/Fastify)
-*   **Real-time**: Socket.IO with Redis Adapter
-*   **Database**: PostgreSQL 15 (Prisma ORM)
-*   **Cache/PubSub**: Redis Cluster
-*   **Infrastructure**: Docker, Kubernetes-ready
+## What technologies are used for this project?
 
----
+This project is built with:
 
-## 📦 Service Architecture
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-| Service | Path | Description |
-| :--- | :--- | :--- |
-| **Auth Service** | `services/auth-service` | RBAC, JWT issuance, KYC, Profile management |
-| **Game Service** | `services/game-service` | WebSocket server, Game Loop, Matchmaking |
-| **Wallet Service** | `services/wallet-service` | Ledger management, Bet locking, Settlement |
-| **API Gateway** | `services/api-gateway` | Unified entry point, Rate limiting, Proxy |
-| **Database** | `packages/database` | Shared Prisma schema and migrations |
-| **Game Engine** | `packages/game-engine` | Core rules, Deck, Hand Evaluation, Festival logic |
+## How can I deploy this project?
 
----
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-## 📚 Documentation
+## Can I connect a custom domain to my Lovable project?
 
-*   [**Architecture & Game Logic**](./ARCHITECTURE.md) - Deep dive into the Game Engine, Festival Modes, and Financial Model.
-*   [**Deployment Guide**](./DEPLOYMENT.md) - Docker, Kubernetes strategies, and Observability.
+Yes, you can!
 
----
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-## 🛡 Security Features
-
-*   **Deterministic Shuffling**: HMAC-SHA256 based PRNG with verifiable proofs.
-*   **Zero-Inflation Economy**: `Pot = Winner + Panel + Broker`. No money is minted during gameplay.
-*   **Audit Trails**: Immutable ledger for every financial transaction.
-*   **Role-Based Access**: Strict separation between Super Admin, Panel Admin, Brokers, and Players.
-
----
-
-## 📜 License
-Proprietary & Confidential.
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
